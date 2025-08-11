@@ -1,4 +1,4 @@
-# myfren
+# tradingview-trade-executor is a tool to execute trades based on TradingView alerts.
 
 ```sh
 go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
