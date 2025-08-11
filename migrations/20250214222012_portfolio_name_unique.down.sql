@@ -1,0 +1,1 @@
+DROP INDEX portfolio_name_uk;

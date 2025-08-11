@@ -1,0 +1,11 @@
+package: adminhttp
+output: internal/http/admin/server.oapi_gen.go
+generate:
+  gin-server: true
+  embedded-spec: true
+output-options:
+  include-tags:
+    - admin-api
+additional-imports:
+  - alias: .
+    package: github.com/frenswifbenefits/myfren/internal/openapi

@@ -1,0 +1,31 @@
+debug = true
+
+[user_server]
+address = ":8080"
+
+[admin_server]
+address = ":8081"
+
+[[admin_server.users]]
+username = "don"
+password = "$2a$12$vwE0vnConXF5XQDcLaaiYu3C.dGpsJk3YAOv3VXHtlUDRkRPZyMxu"
+[[admin_server.users]]
+username = "loolmi"
+password = "$2a$12$vwE0vnConXF5XQDcLaaiYu3C.dGpsJk3YAOv3VXHtlUDRkRPZyMxu"
+
+[webhook_server]
+address = ":80"
+tv_whitelist_enabled = true
+
+[monitoring_server]
+address = ":6060"
+
+[db]
+dsn = "postgresql://fren:password@localhost:5432/fren?sslmode=disable"
+
+[security]
+aes_salt="34e0320b94132dfe03960845786790e8"
+
+[bybit]
+main_rest_api = "https://api.bybit.com"
+test_rest_api = "https://api-demo.bybit.com"

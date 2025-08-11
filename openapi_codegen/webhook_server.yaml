@@ -1,0 +1,10 @@
+package: webhookhttp
+output: internal/http/webhook/server.oapi_gen.go
+generate:
+  gin-server: true
+output-options:
+  include-tags:
+    - webhook-api
+#additional-imports:
+#  - alias: .
+#    package: github.com/frenswifbenefits/myfren/internal/openapi

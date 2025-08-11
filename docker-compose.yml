@@ -1,0 +1,74 @@
+version: "3.8"
+services:
+  postgres:
+    image: postgres:alpine
+    container_name: fren_postgres_db
+    environment:
+      POSTGRES_DB: fren
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: fren
+    ports:
+      - "5432:5432"
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "fren", "-d", "fren" ]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+
+  fren:
+    image: fren
+    container_name: fren
+    build:
+      context: .
+      dockerfile: Dockerfile
+    entrypoint:
+      - /bin/sh
+    command: -c "/app/migrate -database postgresql://fren:password@postgres/fren?sslmode=disable -path migrations up && /app/fren"
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+      - "6060:6060"
+      - "80:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    environment:
+      DB_DSN: postgresql://fren:password@postgres:5432/fren?sslmode=disable
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    ports:
+      - "9090"
+    restart: unless-stopped
+    volumes:
+      - ./dist/prometheus:/etc/prometheus
+      - ./prom_data:/prometheus
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=frengrafana
+    volumes:
+      - ./dist/grafana/:/etc/grafana/provisioning/datasources
+      - ./grafana/dashboards-provisioning:/etc/grafana/provisioning/dashboards
+      - ./grafana/dashboards:/var/lib/grafana/dashboards

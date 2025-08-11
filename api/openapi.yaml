@@ -1,0 +1,1196 @@
+openapi: '3.0.2'
+info:
+  title: Fren trading app
+  version: '1.0'
+  description: |
+    ## Api description here...
+
+
+servers:
+  - url: 'http://localhost:8080/'
+    description: Local user server
+  - url: 'http://localhost:8081/'
+    description: Local admin server
+  - url: 'http://localhost:80/'
+    description: Local webhook server
+
+tags:
+  - name: "public-api"
+    description: "Public API"
+  - name: "user-api"
+    description: "User API"
+  - name: "admin-api"
+    description: "Admin API"
+  - name: "webhook-api"
+    description: "API to handle tradingview updates"
+
+paths:
+  # WEBHOOK SERVER
+
+  /v1/tv:
+    servers:
+      - url: 'http://localhost:80/'
+        description: Local webhook server
+    post:
+      tags:
+        - webhook-api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                strategy_name:
+                  type: string
+                action:
+                  type: string
+                exchange:
+                  type: string
+                symbol:
+                  type: string
+              required:
+                - strategy_name
+                - action
+                - exchange
+                - symbol
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        '400':
+          $ref: '#/components/responses/BadRequestErrorResponse'
+        '5XX':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+
+  # ADMIN SERVER
+  /v1/admin/docs:
+    get:
+      tags:
+        - admin-api
+      responses:
+        '200':
+          description: OK
+
+  /v1/admin/login:
+    post:
+      tags:
+        - admin-api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+              required:
+                - username
+                - password
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestErrorResponse'
+        '5XX':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+
+  /v1/admin/customer/list:
+    get:
+      tags:
+        - admin-api
+      security:
+        - bearerAuth: [ ]
+      servers:
+        - url: 'http://localhost:8081/'
+          description: Local admin server
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestErrorResponse'
+        '5XX':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+
+  /v1/admin/generate_invite_token:
+    post:
+      tags:
+        - admin-api
+      security:
+        - bearerAuth: [ ]
+      servers:
+        - url: 'http://localhost:8081/'
+          description: Local admin server
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                count:
+                  type: integer
+                  description: "how much tokens to generate. possible values [1,20]"
+              required:
+                - count
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InviteTokensResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestErrorResponse'
+        '5XX':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+
+  /v1/admin/portfolio:
+    post:
+      tags:
+        - admin-api
+      security:
+        - bearerAuth: [ ]
+      servers:
+        - url: 'http://localhost:8081/'
+          description: Local admin server
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                image_base64:
+                  type: string
+                year_pnl:
+                  type: string
+                avg_delay:
+                  type: string
+                risk_level:
+                  type: string
+                strategy_type:
+                  type: string
+                dca_levels:
+                  type: integer
+                leverage:
+                  type: integer
+                cycle_investment_percent:
+                  type: string
+                holdings:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/Holding"
+              required:
+                - name
+                - portfolio_ids
+                - description
+                - image_base64
+                - year_pnl
+                - avg_delay
+                - risk_level
+                - strategy_type
+                - dca_levels
+                - leverage
+                - cycle_investment_percent
+                - holdings
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestErrorResponse'
+        '5XX':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+    delete:
+      tags:
+        - admin-api
+      security:
+        - bearerAuth: [ ]
+      servers:
+        - url: 'http://localhost:8081/'
+          description: Local admin server
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  x-go-type: int64
+              required:
+                - id
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        '400':
+          $ref: '#/components/responses/BadRequestErrorResponse'
+        '5XX':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+    put:
+      tags:
+        - admin-api
+      security:
+        - bearerAuth: [ ]
+      servers:
+        - url: 'http://localhost:8081/'
+          description: Local admin server
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  x-go-type: int64
+                name:
+                  type: string
+                description:
+                  type: string
+                image_base64:
+                  type: string
+                year_pnl:
+                  type: string
+                avg_delay:
+                  type: string
+                risk_level:
+                  type: string
+                strategy_type:
+                  type: string
+                dca_levels:
+                  type: integer
+                leverage:
+                  type: integer
+                cycle_investment_percent:
+                  type: string
+                holdings:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/Holding"
+                portfolio_ids:
+                  type: array
+                  items:
+                    type: integer
+                    x-go-type: int64
+              required:
+                - id
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        '400':
+          $ref: '#/components/responses/BadRequestErrorResponse'
+        '5XX':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+
+  /v1/admin/portfolio/list:
+    get:
+      tags:
+        - admin-api
+      security:
+        - bearerAuth: [ ]
+      servers:
+        - url: 'http://localhost:8081/'
+          description: Local admin server
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PortfolioListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestErrorResponse'
+        '5XX':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+
+  /v1/admin/fren:
+    post:
+      tags:
+        - admin-api
+      security:
+        - bearerAuth: [ ]
+      servers:
+        - url: 'http://localhost:8081/'
+          description: Local admin server
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                image_base64:
+                  type: string
+                portfolio_ids:
+                  type: array
+                  items:
+                    type: integer
+                    x-go-type: int64
+              required:
+                - name
+                - description
+                - image_base64
+                - portfolio_ids
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestErrorResponse'
+        '5XX':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+    delete:
+      tags:
+        - admin-api
+      security:
+        - bearerAuth: [ ]
+      servers:
+        - url: 'http://localhost:8081/'
+          description: Local admin server
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  x-go-type: int64
+              required:
+                - id
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        '400':
+          $ref: '#/components/responses/BadRequestErrorResponse'
+        '5XX':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+    put:
+      tags:
+        - admin-api
+      security:
+        - bearerAuth: [ ]
+      servers:
+        - url: 'http://localhost:8081/'
+          description: Local admin server
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  x-go-type: int64
+                name:
+                  type: string
+                description:
+                  type: string
+                image_base64:
+                  type: string
+                portfolio_ids:
+                  type: array
+                  items:
+                    type: integer
+                    x-go-type: int64
+              required:
+                - id
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        '400':
+          $ref: '#/components/responses/BadRequestErrorResponse'
+        '5XX':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+
+  /v1/admin/fren/list:
+    get:
+      tags:
+        - admin-api
+      security:
+        - bearerAuth: [ ]
+      servers:
+        - url: 'http://localhost:8081/'
+          description: Local admin server
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FrenListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestErrorResponse'
+        '5XX':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+
+  ### USER API
+  /v1/user/docs:
+    get:
+      tags:
+        - public-api
+      responses:
+        '200':
+          description: OK
+
+  /v1/user/register:
+    post:
+      tags:
+        - public-api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                invite_token:
+                  type: string
+              required:
+                - username
+                - password
+                - invite_token
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        '400':
+          $ref: '#/components/responses/BadRequestErrorResponse'
+        '5XX':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+
+  /v1/user/login:
+    post:
+      tags:
+        - public-api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+              required:
+                - username
+                - password
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestErrorResponse'
+        '5XX':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+
+  /v1/user/settings:
+    get:
+      tags:
+        - user-api
+      servers:
+        - url: 'http://localhost:8080/'
+          description: Local user server
+      security:
+        - bearerAuth: [ ]
+
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettingsResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenErrorResponse'
+        '5XX':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+
+    put:
+      tags:
+        - user-api
+      servers:
+        - url: 'http://localhost:8080/'
+          description: Local user server
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                legal_name:
+                  type: string
+                gender:
+                  type: string
+                country:
+                  type: string
+                phone_number:
+                  type: string
+                image_base64:
+                  type: string
+                bybit_api_key:
+                  type: string
+                bybit_api_secret:
+                  type: string
+                bybit_test_api_key:
+                  type: string
+                bybit_test_api_secret:
+                  type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        '400':
+          $ref: '#/components/responses/BadRequestErrorResponse'
+        '5XX':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+
+  /v1/user/portfolio/subscribe:
+    post:
+      tags:
+        - user-api
+      servers:
+        - url: 'http://localhost:8080/'
+          description: Local user server
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                portfolio_id:
+                  type: integer
+                  x-go-type: int64
+                is_test:
+                  type: boolean
+                amount:
+                  type: string
+              required:
+                - is_test
+                - portfolio_id
+                - amount
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestErrorResponse'
+        '5XX':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+
+  /v1/user/portfolio/unsubscribe:
+    post:
+      tags:
+        - user-api
+      servers:
+        - url: 'http://localhost:8080/'
+          description: Local user server
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                subscription_id:
+                  type: integer
+                  x-go-type: int64
+              required:
+                - subscription_id
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        '400':
+          $ref: '#/components/responses/BadRequestErrorResponse'
+        '5XX':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+
+  /v1/user/portfolio/subscriptions/list:
+    get:
+      tags:
+        - user-api
+      servers:
+        - url: 'http://localhost:8080/'
+          description: Local user server
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestErrorResponse'
+        '5XX':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+
+  /v1/user/actions/list:
+    get:
+      tags:
+        - user-api
+      servers:
+        - url: 'http://localhost:8080/'
+          description: Local user server
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestErrorResponse'
+        '5XX':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+
+  /v1/user/trades/list:
+    get:
+      tags:
+        - user-api
+      servers:
+        - url: 'http://localhost:8080/'
+          description: Local user server
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TradeListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestErrorResponse'
+        '5XX':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+
+  /v1/user/portfolio/list:
+    get:
+      tags:
+        - user-api
+      security:
+        - bearerAuth: [ ]
+      servers:
+        - url: 'http://localhost:8081/'
+          description: Local admin server
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PortfolioListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestErrorResponse'
+        '5XX':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+
+  /v1/user/fren/list:
+    get:
+      tags:
+        - user-api
+      security:
+        - bearerAuth: [ ]
+      servers:
+        - url: 'http://localhost:8081/'
+          description: Local admin server
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FrenListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestErrorResponse'
+        '5XX':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+
+components:
+  securitySchemes:
+    bearerAuth: # arbitrary name for the security scheme
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    IdResponse:
+      allOf:
+        - $ref: "#/components/schemas/Response"
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  x-go-type: int64
+                  description: "allocated internal id of the customer"
+              required:
+                - id
+          required:
+            - data
+          example:
+            { "code": 0,"message": "Success","data": { "id": 42 } }
+
+    TokenResponse:
+      allOf:
+        - $ref: "#/components/schemas/Response"
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                token:
+                  type: string
+                  description: "token to use in Auth header for all the auth endpoints"
+              required:
+                - id
+                - token
+          required:
+            - data
+          example:
+            { "code": 0,"message": "Success","data": { "token": "74b0daea68e2eb9d2639356be8a6fa1aa74404ae1ca603443b2649315984abaa" } }
+
+    InviteTokensResponse:
+      allOf:
+        - $ref: "#/components/schemas/Response"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                type: string
+          required:
+            - data
+
+    SettingsResponse:
+      allOf:
+        - $ref: "#/components/schemas/Response"
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                settings:
+                  type: object
+                  properties:
+                    username:
+                      type: string
+                    legal_name:
+                      type: string
+                    gender:
+                      type: string
+                    country:
+                      type: string
+                    phone_number:
+                      type: string
+                    image_base64:
+                      type: string
+                    bybit_api_key:
+                      type: string
+                    bybit_api_secret:
+                      type: string
+                    bybit_test_api_key:
+                      type: string
+                    bybit_test_api_secret:
+                      type: string
+                  required:
+                    - username
+                    - legal_name
+                    - gender
+                    - country
+                    - phone_number
+                    - image_base64
+                    - bybit_api_key
+                    - bybit_api_secret
+                    - bybit_test_api_key
+                    - bybit_test_api_secret
+              required:
+                - settings
+          required:
+            - data
+
+    Holding:
+      type: object
+      properties:
+        coin:
+          type: string
+        coin_img:
+          type: string
+        percent:
+          type: string
+      required:
+        - coin
+        - coin_img
+        - percent
+
+    SubscriptionListResponse:
+      allOf:
+        - $ref: "#/components/schemas/Response"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/Subscription"
+          required:
+            - data
+
+    Subscription:
+      type: object
+      properties:
+        id:
+          type: integer
+          x-go-type: int64
+        portfolio_id:
+          type: integer
+          x-go-type: int64
+        is_test:
+          type: boolean
+        amount:
+          type: string
+        status:
+          type: string
+        pnl:
+          type: string
+        exchange:
+          type: string
+        created_at:
+          type: string
+        updated_at:
+          type: string
+      required:
+        - id
+        - portfolio_id
+        - is_test
+        - amount
+        - pnl
+        - status
+        - created_at
+        - updated_at
+
+    CustomerListResponse:
+      allOf:
+        - $ref: "#/components/schemas/Response"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/Customer"
+          required:
+            - data
+
+    Customer:
+      type: object
+      properties:
+        id:
+          type: integer
+          x-go-type: int64
+        username:
+          type: string
+        pnl:
+          type: string
+      required:
+        - id
+        - username
+        - pnl
+
+    ActionListResponse:
+      allOf:
+        - $ref: "#/components/schemas/Response"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/Action"
+          required:
+            - data
+
+    Action:
+      type: object
+      properties:
+        id:
+          type: integer
+          x-go-type: int64
+        corr_id:
+          type: string
+        sub_id:
+          type: integer
+          x-go-type: int64
+        portfolio_id:
+          type: integer
+          x-go-type: int64
+        action_type:
+          type: string
+        details:
+          type: object
+        error:
+          type: string
+        created_at:
+          type: string
+      required:
+        - id
+        - corr_id
+        - sub_id
+        - portfolio_id
+        - action_type
+        - details
+        - error
+        - created_at
+
+    TradeListResponse:
+      allOf:
+        - $ref: "#/components/schemas/Response"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/Trade"
+          required:
+            - data
+
+    Trade:
+      type: object
+      properties:
+        id:
+          type: integer
+          x-go-type: int64
+        corr_id:
+          type: string
+        sub_id:
+          type: integer
+          x-go-type: int64
+        portfolio_id:
+          type: integer
+          x-go-type: int64
+        exchange:
+          type: string
+        side:
+          type: string
+        symbol:
+          type: string
+        quantity:
+          type: string
+        price:
+          type: string
+        commission:
+          type: string
+        created_at:
+          type: string
+      required:
+        - id
+        - corr_id
+        - sub_id
+        - portfolio_id
+        - exchange
+        - side
+        - symbol
+        - quantity
+        - price
+        - commission
+        - created_at
+
+    PortfolioListResponse:
+      allOf:
+        - $ref: "#/components/schemas/Response"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/Portfolio"
+          required:
+            - data
+
+    Portfolio:
+      type: object
+      properties:
+        id:
+          type: integer
+          x-go-type: int64
+        name:
+          type: string
+        description:
+          type: string
+        image_base64:
+          type: string
+        year_pnl:
+          type: string
+        avg_delay:
+          type: string
+        risk_level:
+          type: string
+        strategy_type:
+          type: string
+        dca_levels:
+          type: integer
+        leverage:
+          type: integer
+        cycle_investment_percent:
+          type: string
+        holdings:
+          type: array
+          items:
+            $ref: "#/components/schemas/Holding"
+      required:
+        - id
+        - name
+        - description
+        - image_base64
+        - year_pnl
+        - avg_delay
+        - risk_level
+        - type
+        - strategy_type
+        - dca_levels
+        - leverage
+        - cycle_investment_percent
+        - holdings
+
+    FrenListResponse:
+      allOf:
+        - $ref: "#/components/schemas/Response"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/Fren"
+          required:
+            - data
+
+    Fren:
+      type: object
+      properties:
+        id:
+          type: integer
+          x-go-type: int64
+        name:
+          type: string
+        description:
+          type: string
+        image_base64:
+          type: string
+        portfolios:
+          type: array
+          items:
+            $ref: "#/components/schemas/Portfolio"
+      required:
+        - id
+        - name
+        - description
+        - image_base64
+        - portfolios
+
+    Response:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+      required:
+        - code
+        - message
+
+  responses:
+    BadRequestErrorResponse:
+      description: bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Response'
+          example: { "code": 1, "message": "bad request" }
+    NotFoundErrorResponse:
+      description: authorization error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Response'
+          example: { "code": 1, "message": "authorization error" }
+    ForbiddenErrorResponse:
+      description: access to resource is forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Response'
+          example: { "code": 1, "message": "forbidden" }
+    InternalServerErrorResponse:
+      description: internal server error while processing the request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Response'
+          example: { "code": 1, "message": "internal server error" }

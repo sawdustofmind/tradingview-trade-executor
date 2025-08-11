@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX portfolio_name_uk ON portfolio (name);

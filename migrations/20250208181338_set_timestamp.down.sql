@@ -1,0 +1,1 @@
+DROP function trigger_set_timestamp;
